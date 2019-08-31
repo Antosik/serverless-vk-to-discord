@@ -6,7 +6,6 @@ interface IEmbed {
   url?: string;
   timestamp: Date;
   image?: { url?: string };
-  video?: { url?: string };
   author: { name: string, url?: string, icon_url?: string };
 }
 
@@ -40,17 +39,27 @@ export async function getAuthor(vk: VK, ownerId: number) {
 
 export function getPhoto(attachments: Attachment[]) {
   const photos = attachments
-    .filter(({ type }) => type === "photo")
-    .map(({ largePhoto }: PhotoAttachment) => largePhoto);
-  const videos = attachments
-    .filter(({ type }) => type === "video")
-    .map(({ payload }: VideoAttachment & { payload: any }) => payload.photo_640);
+    .filter(({ type }) => type === "photo");
 
-  if (photos.length) {
-    return { url: photos[0] };
-  } else if (videos.length) {
-    return { url: videos[0] };
-  } else {
-    return {};
+  return photos.length ? photos[0] : undefined;
+}
+
+export function getVideo(attachments: Attachment[]) {
+  const videos = attachments
+    .filter(({ type }) => type === "video");
+
+  return videos.length ? videos[0] : undefined;
+}
+
+export function getPreview(attachment: Attachment) {
+  if (attachment.type === "photo") {
+    return (attachment as PhotoAttachment).largePhoto;
+
+  } else if (attachment.type === "video") {
+    const { payload } = attachment as VideoAttachment & { payload: any };
+    const photos_keys = Object.keys(payload).filter((key) => key.startsWith("photo_"));
+    return payload[photos_keys[photos_keys.length - 1]];
   }
+
+  return "";
 }
