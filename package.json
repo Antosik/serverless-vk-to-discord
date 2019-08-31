@@ -1,0 +1,28 @@
+{
+  "name": "serverless-vk-to-discord",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run lint",
+    "build": "rimraf -f dist && tsc",
+    "watch": "tsc -w",
+    "lint": "tslint -c tslint.json -p tsconfig.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.31",
+    "@types/node": "^8.10.31",
+    "rimraf": "^3.0.0",
+    "serverless": "^1.51.0",
+    "serverless-offline": "^5.10.1",
+    "tslint": "^5.19.0",
+    "typescript": "^3.6.2"
+  },
+  "dependencies": {
+    "axios": "^0.19.0",
+    "vk-io": "^4.0.0-rc.20"
+  }
+}

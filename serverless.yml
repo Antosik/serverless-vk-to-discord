@@ -1,0 +1,40 @@
+service: 
+  name: serverless-vk-to-discord
+
+plugins:
+  - serverless-offline
+  
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: ${opt:region, 'eu-central-1'}
+  stage: ${opt:stage, 'dev'}
+
+package:
+  include:
+    - dist/**
+  exclude:
+    - .git/**
+    - .editorconfig
+    - .gitignore
+    - package-lock.json
+    - package.json
+
+functions:
+  handle:
+    description: "Handle VK webhook"
+    handler: dist/index.handle
+    events:
+      - http:
+          path: vk
+          method: post
+          cors: true
+    timeout: 30
+    environment:
+      VK_GROUP_TOKEN: ${file(./env.json):VK_GROUP_TOKEN}
+      VK_GROUP_ID: ${file(./env.json):VK_GROUP_ID}
+
+      VK_CALLBACK_CONFIRM: ${file(./env.json):VK_CALLBACK_CONFIRM}
+      VK_CALLBACK_SECRET: ${file(./env.json):VK_CALLBACK_SECRET}
+      
+      DISCORD_WEBHOOK_URL: ${file(./env.json):DISCORD_WEBHOOK_URL}
