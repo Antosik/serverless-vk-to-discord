@@ -1,48 +1,27 @@
 import axios from "axios";
-import { VK, WallPostContext } from "vk-io";
+import { VK, WallAttachment, WallPostContext } from "vk-io";
 
-import { escapeSymbols, generateEmbed, getAuthor, getPhoto, getPreview, getVideo } from "../getters";
+import { regeneratePost } from "../getters";
 
 export async function handleWallPost({ wall, vk }: WallPostContext & { wall: { authorId: number }, vk: VK }) {
   const group_id = Number(process.env.VK_GROUP_ID);
-  const {
-    authorId,
-    id,
-    text = "v",
-    attachments = [],
-    createdAt = Date.now() / 1000,
-    copyHistory = []
-  } = wall;
+  const { authorId, copyHistory = [] } = wall;
 
-  if (group_id !== authorId || copyHistory.length) {
+  const embeds = [];
+  if (group_id !== authorId) {
     return;
   }
 
-  const [photo, video, author] = await Promise.all([
-    getPhoto(attachments),
-    getVideo(attachments),
-    getAuthor(vk, group_id)
-  ]);
+  const post = await regeneratePost(vk, wall);
+  embeds.push(post);
 
-  let description = escapeSymbols(text) || "";
-
-  let image = {};
-  if (photo) {
-    image = { url: getPreview(photo) };
-  } else if (video) {
-    image = { url: getPreview(video) };
-    description += `\n\n[Ссылка на видео](https://vk.com/video${video.ownerId}_${video.id})`;
+  if (copyHistory.length) {
+    const repost_source = copyHistory[copyHistory.length - 1] as WallAttachment & { authorId: number } ;
+    const repost = await regeneratePost(vk, repost_source, true);
+    embeds.push(repost);
   }
 
-  const embed = generateEmbed({
-    description: description.trim() || "v",
-    url: `https://vk.com/wall${group_id}_${id}`,
-    timestamp: new Date(createdAt * 1e3),
-    image,
-    author
-  });
-
-  await callDiscordWebhook(embed);
+  await callDiscordWebhook({ embeds });
 }
 
 async function callDiscordWebhook(embed) {

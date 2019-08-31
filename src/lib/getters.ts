@@ -1,4 +1,4 @@
-import { Attachment, PhotoAttachment, VideoAttachment, VK } from "vk-io";
+import { Attachment, PhotoAttachment, VideoAttachment, VK, WallAttachment } from "vk-io";
 
 interface IEmbed {
   title?: string;
@@ -11,20 +11,16 @@ interface IEmbed {
 
 export function generateEmbed({ description, url, image, timestamp, author }: IEmbed) {
   return {
-    embeds: [
-      {
-        title: "Новый пост во ВКонтакте",
-        description,
-        url,
-        color: 14854844,
-        timestamp: timestamp.toISOString(),
-        thumbnail: {
-          url: author.icon_url
-        },
-        image,
-        author
-      }
-    ]
+    title: "Новый пост во ВКонтакте",
+    description,
+    url,
+    color: 14854844,
+    timestamp: timestamp.toISOString(),
+    thumbnail: {
+      url: author.icon_url
+    },
+    image,
+    author
   };
 }
 
@@ -52,6 +48,10 @@ export function getVideo(attachments: Attachment[]): VideoAttachment {
 }
 
 export function getPreview(attachment: Attachment): string {
+  if (!attachment) {
+    return "";
+  }
+
   if (attachment.type === "photo") {
     return (attachment as PhotoAttachment).largePhoto;
 
@@ -66,4 +66,40 @@ export function getPreview(attachment: Attachment): string {
 
 export function escapeSymbols(text: string): string {
   return text.replace(/([*`_~])/, "\\$1");
+}
+
+export async function regeneratePost(
+  vk, {
+    id, authorId, text = "",
+    attachments = [],
+    createdAt = Date.now() / 1000,
+  }: WallAttachment & { authorId: number },
+  isRepost = false
+): Promise<IEmbed> {
+  const post: IEmbed = {
+    title: isRepost ? "Репост" : "Новый пост во ВКонтакте",
+    description: "",
+    url: `https://vk.com/wall${authorId}_${id}`,
+    author: { name: "" },
+    image: { url: "" },
+    timestamp: new Date(createdAt * 1e3)
+  };
+
+  post.description = escapeSymbols(text) || "";
+
+  const [photo, video, author] = await Promise.all([
+    getPhoto(attachments),
+    getVideo(attachments),
+    getAuthor(vk, authorId)
+  ]);
+  post.author = author;
+
+  if (photo) {
+    post.image = { url: getPreview(photo) };
+  } else if (video) {
+    post.image = { url: getPreview(video) };
+    post.description += `\n\n[Ссылка на видео](https://vk.com/video${video.ownerId}_${video.id})`;
+  }
+
+  return post;
 }
