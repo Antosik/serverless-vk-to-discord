@@ -37,21 +37,21 @@ export async function getAuthor(vk: VK, ownerId: number) {
   };
 }
 
-export function getPhoto(attachments: Attachment[]) {
+export function getPhoto(attachments: Attachment[]): PhotoAttachment {
   const photos = attachments
     .filter(({ type }) => type === "photo");
 
-  return photos.length ? photos[0] : undefined;
+  return photos.length ? photos[0] as PhotoAttachment : undefined;
 }
 
-export function getVideo(attachments: Attachment[]) {
+export function getVideo(attachments: Attachment[]): VideoAttachment {
   const videos = attachments
     .filter(({ type }) => type === "video");
 
-  return videos.length ? videos[0] : undefined;
+  return videos.length ? videos[0] as VideoAttachment : undefined;
 }
 
-export function getPreview(attachment: Attachment) {
+export function getPreview(attachment: Attachment): string {
   if (attachment.type === "photo") {
     return (attachment as PhotoAttachment).largePhoto;
 
@@ -62,4 +62,8 @@ export function getPreview(attachment: Attachment) {
   }
 
   return "";
+}
+
+export function escapeSymbols(text: string): string {
+  return text.replace(/([*`_~])/, "\\$1");
 }

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { VK, WallPostContext } from "vk-io";
 
-import { generateEmbed, getAuthor, getPhoto, getPreview, getVideo } from "../getters";
+import { escapeSymbols, generateEmbed, getAuthor, getPhoto, getPreview, getVideo } from "../getters";
 
 export async function handleWallPost({ wall, vk }: WallPostContext & { wall: { authorId: number }, vk: VK }) {
   const group_id = Number(process.env.VK_GROUP_ID);
@@ -24,7 +24,7 @@ export async function handleWallPost({ wall, vk }: WallPostContext & { wall: { a
     getAuthor(vk, group_id)
   ]);
 
-  let description = text || "";
+  let description = escapeSymbols(text) || "";
 
   let image = {};
   if (photo) {
@@ -35,7 +35,7 @@ export async function handleWallPost({ wall, vk }: WallPostContext & { wall: { a
   }
 
   const embed = generateEmbed({
-    description: description || "v",
+    description: description.trim() || "v",
     url: `https://vk.com/wall${group_id}_${id}`,
     timestamp: new Date(createdAt * 1e3),
     image,
