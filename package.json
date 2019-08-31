@@ -14,7 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@types/aws-lambda": "^8.10.31",
-    "@types/node": "^8.10.31",
+    "@types/node": "^8.10.53",
     "rimraf": "^3.0.0",
     "serverless": "^1.51.0",
     "serverless-offline": "^5.10.1",
